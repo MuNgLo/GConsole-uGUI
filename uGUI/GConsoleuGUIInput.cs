@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("Scripts/Gconsole-uGUI/GConsoleuGUIInput")]
 public class GConsoleuGUIInput : MonoBehaviour
 {
 		[HideInInspector]
@@ -17,7 +18,6 @@ public class GConsoleuGUIInput : MonoBehaviour
 
 		void OnSubmit (string line)
 		{
-				Debug.Log ("OnSubmit(" + line + ")");
 				uGUI.OnInput ();
 		}
 

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 
 
-[AddComponentMenu("Scripts/GConsoleNGUISuggestion")]
+[AddComponentMenu("Scripts/Gconsole-uGUI/GConsoleuGUISuggestion")]
 public class GConsoleuGUISuggestion : MonoBehaviour
 {
     public Text label;

@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System;
 
+[AddComponentMenu("Scripts/Gconsole-uGUI/GConsoleuGUI")]
 public class GConsoleuGUI : MonoBehaviour
 {
-
 		public Text consoleOutput;
 		public InputField input;
+		public EventSystem eSystem;
 		public GConsoleuGUISuggestion[] suggestions;
 		public bool clearOnSubmit = false;
 		public bool reselectOnSubmit = true;
@@ -16,67 +18,30 @@ public class GConsoleuGUI : MonoBehaviour
 
 		void Start ()
 		{
-				//Register the "OnOutput" method as a listener for console output.
-				GConsole.OnOutput += OnOutput;
+				GConsole.OnOutput += OnOutput;	//Register the "OnOutput" method as a listener for console output.
 				input.GetComponent<GConsoleuGUIInput> ().uGUI = this;
-				//Fire the OnChange method whenever input changes (so we can then update the suggestions).
-				//EventDelegate.Add(input.onChange, OnChange);
 		}
 
 		void OnOutput (string line)
 		{
-				Debug.Log ("OnOutput(" + line + ")");
 				consoleOutput.text += '\n' + line;
 		}
 
 		public void OnInput ()
 		{
-				Debug.Log ("OnInput(" + input.value + ")");
 				string cmd = input.value;
-
 				if (string.IsNullOrEmpty (cmd))
 						return;
-
-
 				//Send command to the console
 				GConsole.Eval (cmd);
-
 				if (clearOnSubmit) {
 						input.value = string.Empty;
-						input.transform.FindChild("gc_Input_text").GetComponent<Text> ().text = string.Empty;
+						input.transform.FindChild ("gc_Input_text").GetComponent<Text> ().text = string.Empty;
+						Debug.Log("Clearing!");
 				}
-				if (reselectOnSubmit) //Has to be done in next frame for NGUI reasons (quirk in NGUI)..
-						StartCoroutine (SelectInputNextFrame ());
-		}
-
-		IEnumerator SelectInputNextFrame ()
-		{
-				yield return null;
-				//input.;
-
-		}
-
-		IEnumerator ClearInputNextFrame ()
-		{
-				yield return null;
-				input.value = "";
-				input.transform.FindChild("gc_Input_text").GetComponent<Text> ().text = string.Empty;
-
-		}
-
-
-		/* void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            gameObject.SetActive(false);
-        }
-    }*/
-
-
-		void OnEnable ()
-		{
-				StartCoroutine (ClearInputNextFrame ()); //Necessary because otherwise the input field will contain the letter used to open the UI.
+				if (reselectOnSubmit) {// TODO focus is now kept on input but need to trigger edit state to
+						eSystem.SetSelectedGameObject (input.gameObject, null);
+				}
 		}
 
 		public void OnChange ()
@@ -103,19 +68,12 @@ public class GConsoleuGUI : MonoBehaviour
 						else
 								suggestions [i].ShowSuggestion (null);
 				}
-        
 		}
     
 		public void OnSuggestionClicked (string line)
 		{
+				int index = Convert.ToInt32 (line) - 1;
 				//Ugly solution of setting input to the button (suggestion) that was just clicked.
-				/*input.value =
-          NGUIText.StripSymbols(
-          UIButton.current.GetComponent<GConsoleNGUISuggestion>().label.text.Split(' ')[0]
-          + " ");
-		*/
-
-				//Reselect the input the next frame (quirk in NGUI, can't do it the current).
-				StartCoroutine (SelectInputNextFrame ());
+				input.value = suggestions [index].label.text.Split (' ') [0];
 		}
 }
