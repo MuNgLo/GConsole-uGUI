@@ -29,13 +29,13 @@ public class GConsoleuGUI : MonoBehaviour
 
 		public void OnInput ()
 		{
-				string cmd = input.value;
+		string cmd = input.text ;
 				if (string.IsNullOrEmpty (cmd))
 						return;
 				//Send command to the console
 				GConsole.Eval (cmd);
 				if (clearOnSubmit) {
-						input.value = string.Empty;
+			input.text  = string.Empty;
 						input.transform.FindChild ("gc_Input_text").GetComponent<Text> ().text = string.Empty;
 						Debug.Log("Clearing!");
 				}
@@ -51,20 +51,20 @@ public class GConsoleuGUI : MonoBehaviour
 
 		private void LoadSuggestions ()
 		{
-				List<String> sugstrings;
+				List<GConsoleItem> sugitems;
 
 				//Not enough characters typed yet, no suggestions to be shown!
-				if (minCharBeforeSuggestions != 0 && input.value.Length < minCharBeforeSuggestions) {
-						sugstrings = new List<String> ();
+		if (minCharBeforeSuggestions != 0 && input.text.Length < minCharBeforeSuggestions) {
+						sugitems = new List<GConsoleItem> ();
 				} else {
 						//Ask GConsole for suggestions, true because we want to have the description too.
-						sugstrings = GConsole.GetSuggestions (input.value, true);
+						sugitems = GConsole.GetSuggestionItems(input.text);
 				}
 
 				//Display suggestions (and hide unused suggestion boxes by passing null).
 				for (int i = 0; i < suggestions.Length; i++) {
-						if (i < sugstrings.Count)
-								suggestions [i].ShowSuggestion (sugstrings [i]);
+						if (i < sugitems.Count)
+								suggestions [i].ShowSuggestion (sugitems [i]);
 						else
 								suggestions [i].ShowSuggestion (null);
 				}
@@ -74,6 +74,6 @@ public class GConsoleuGUI : MonoBehaviour
 		{
 				int index = Convert.ToInt32 (line) - 1;
 				//Ugly solution of setting input to the button (suggestion) that was just clicked.
-				input.value = suggestions [index].label.text.Split (' ') [0];
+		input.text = suggestions [index].label.text.Split (' ') [0];
 		}
 }
