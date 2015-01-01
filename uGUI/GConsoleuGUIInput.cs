@@ -5,27 +5,26 @@ using UnityEngine.UI;
 public class GConsoleuGUIInput : MonoBehaviour
 {
 		[HideInInspector]
-		public GConsoleuGUI
-				uGUI;
+		public GConsoleuGUI uGUI;
 		private string oldvalue;
 		private InputField input;
 
 		void Start ()
 		{
 				input = GetComponent<InputField> ();
-				input.onSubmit.AddListener (OnSubmit);
+				input.onEndEdit.AddListener (onEndEdit);
 		}
 
-		void OnSubmit (string line)
+		void onEndEdit (string line)
 		{
-				uGUI.OnInput ();
+			uGUI.OnInput ();
 		}
 
 		void Update ()
 		{
-				if (input.value != oldvalue) {
+				if (input.text != oldvalue) {
 						uGUI.OnChange ();
 				}
-				oldvalue = input.value;
+				oldvalue = input.text;
 		}
 }
