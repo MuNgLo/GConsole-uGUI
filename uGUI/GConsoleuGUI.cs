@@ -8,72 +8,81 @@ using System;
 [AddComponentMenu("Scripts/Gconsole-uGUI/GConsoleuGUI")]
 public class GConsoleuGUI : MonoBehaviour
 {
-		public Text consoleOutput;
-		public InputField input;
-		public EventSystem eSystem;
-		public GConsoleuGUISuggestion[] suggestions;
-		public bool clearOnSubmit = false;
-		public bool reselectOnSubmit = true;
-		public int minCharBeforeSuggestions;
+	public int max_OutputLength = 500; // If we put to much text in the textarea Unity will go nuts
+	public Text consoleOutput;
+	public InputField input;
+	public GConsoleuGUISuggestion[] suggestions;
+	public bool clearOnSubmit = false;
+	public bool reselectOnSubmit = true;
+	public int minCharBeforeSuggestions = 1;
 
-		void Start ()
-		{
-				GConsole.OnOutput += OnOutput;	//Register the "OnOutput" method as a listener for console output.
-				input.GetComponent<GConsoleuGUIInput> ().uGUI = this;
+	void Start ()
+	{
+		GConsole.OnOutput += OnOutput;	//Register the "OnOutput" method as a listener for console output.
+		input.GetComponent<GConsoleuGUIInput> ().uGUI = this;
+		foreach(GConsoleuGUISuggestion sugg in suggestions) {
+			sugg.uGUI = this;
 		}
+	}
 
-		void OnOutput (string line)
-		{
-				consoleOutput.text += '\n' + line;
+	void OnEnable ()
+	{
+		input.Select ();
+		input.ActivateInputField ();
+	}
+
+	void OnOutput (string line)
+	{
+		if (consoleOutput.text.Length > max_OutputLength) {  // Shorten the textlength so Unity can handle it
+			consoleOutput.text = consoleOutput.text.Substring( ( consoleOutput.text.Length - max_OutputLength ), max_OutputLength );
 		}
+		consoleOutput.text += '\n' + line;	// add the console output to the output textarea TODO make this clamp length
+	}
 
-		public void OnInput ()
-		{
-		string cmd = input.text ;
-				if (string.IsNullOrEmpty (cmd))
-						return;
-				//Send command to the console
-				GConsole.Eval (cmd);
-				if (clearOnSubmit) {
-			input.text  = string.Empty;
-						input.transform.FindChild ("gc_Input_text").GetComponent<Text> ().text = string.Empty;
-						Debug.Log("Clearing!");
-				}
-				if (reselectOnSubmit) {// TODO focus is now kept on input but need to trigger edit state to
-						eSystem.SetSelectedGameObject (input.gameObject, null);
-				}
+	public void OnInput ()
+	{
+		string cmd = input.text;
+		if (string.IsNullOrEmpty (cmd)) {
+			return;
 		}
-
-		public void OnChange ()
-		{
-				LoadSuggestions ();
+		GConsole.Eval (cmd);	//Send command to the console
+		if (clearOnSubmit) {
+			input.text = string.Empty;
 		}
+		if (reselectOnSubmit) {
+			input.Select ();
+			input.ActivateInputField ();
+		}
+	}
 
-		private void LoadSuggestions ()
-		{
-				List<GConsoleItem> sugitems;
+	public void OnChange ()
+	{
+		LoadSuggestions ();
+	}
 
-				//Not enough characters typed yet, no suggestions to be shown!
+	private void LoadSuggestions ()
+	{
+		List<GConsoleItem> sugitems;
+		//Not enough characters typed yet, no suggestions to be shown!
 		if (minCharBeforeSuggestions != 0 && input.text.Length < minCharBeforeSuggestions) {
-						sugitems = new List<GConsoleItem> ();
-				} else {
-						//Ask GConsole for suggestions, true because we want to have the description too.
-						sugitems = GConsole.GetSuggestionItems(input.text);
-				}
-
-				//Display suggestions (and hide unused suggestion boxes by passing null).
-				for (int i = 0; i < suggestions.Length; i++) {
-						if (i < sugitems.Count)
-								suggestions [i].ShowSuggestion (sugitems [i]);
-						else
-								suggestions [i].ShowSuggestion (null);
-				}
+			sugitems = new List<GConsoleItem> ();
+		} else {
+			sugitems = GConsole.GetSuggestionItems (input.text);	//Ask GConsole for suggestions.
 		}
+		//Display suggestions (and hide unused suggestion boxes by passing null).
+		for (int i = 0; i < suggestions.Length; i++) {
+			if (i < sugitems.Count)
+				suggestions [i].ShowSuggestion (sugitems [i]);
+			else
+				suggestions [i].ShowSuggestion (null);
+		}
+	}
     
-		public void OnSuggestionClicked (string line)
-		{
-				int index = Convert.ToInt32 (line) - 1;
-				//Ugly solution of setting input to the button (suggestion) that was just clicked.
-		input.text = suggestions [index].label.text.Split (' ') [0];
-		}
+	public void OnSuggestionClicked (string line)
+	{
+		input.text = line.Split(' ')[0];
+		input.Select ();
+		input.ActivateInputField ();
+		input.MoveTextEnd (false);
+	}
 }
